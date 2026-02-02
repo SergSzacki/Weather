@@ -38,12 +38,28 @@ class OpenMeteoClient:
     async def get_current_weather(self, city: str):
         lat, lon = await self.get_coordinates(city)
         if lat is None or lon is None:
-            return f"{city} coordinates not found"
+            return None
 
         params = {
             "latitude": lat,
             "longitude": lon,
             "current_weather": "true"
+        }
+
+        async with self.session.get(self.WEATHER_URL, params=params) as resp:
+            data = await resp.json()
+
+        if "current_weather" not in data:
+            return None
+
+        w = data["current_weather"]
+
+        return {
+            "city": city,
+            "temperature": w["temperature"],
+            "windspeed": w["windspeed"],
+            "winddirection": w["winddirection"],
+            "time": w["time"]
         }
 
         async with self.session.get(self.WEATHER_URL, params=params) as resp:
